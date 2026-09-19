@@ -1,86 +1,98 @@
-# ae-replace-layers-sequential
+# Sequential Multi-Layer Replace for After Effects
 
-A simple After Effects JSX script that replaces multiple layers with new footage **sequentially** — the multi-layer version of Alt+drag that Adobe never built.
-
----
-
-## The Problem
-
-Alt+dragging a source onto a layer in the timeline is the fastest way to do a layer replacement in AE. But it only works **one layer at a time**.
-
-If you have a comp with dozens — or thousands — of placeholder layers that need swapping out, doing it one by one is completely impractical.
-
-## The Use Case That Broke the Camel's Back
-
-This script was born out of editing a **3,000-clip video wall** — a massive composition where every single cell was a placeholder solid that needed replacing with real footage. Alt+dragging 3,000 times wasn't an option.
-
-The built-in workaround (selecting a single source in the Project panel and Alt+dragging) has no multi-layer equivalent. This script fills that gap: select N sources, select N layers, run the script — done.
+A dockable ScriptUI panel for Adobe After Effects that swaps multiple placeholder layers with new footage or precomps **all at once** — complete with a live mapping preview, repeat/cycle handling, and composition support.
 
 ---
 
-## How It Works
+## What Does This Script Do?
 
-The script reads your selected items from the **Project panel** and your selected layers from the **Timeline**, then maps them in order:
+Normally in After Effects, if you have an animated layer or placeholder solid and want to swap it with a new video or image, you hold **`Alt` (Windows)** or **`Option` (Mac)** and drag the new file onto the layer. This keeps all your position, scale, keyframes, effects, and timing intact.
 
+**The catch?** After Effects only lets you do this **one single layer at a time**.
+
+If you're building a video wall, photo grid, slideshow, or montage with dozens (or thousands!) of clips, doing that by hand takes hours. 
+
+This panel provides a full workflow interface:
+* **Live Mapping Preview:** See a side-by-side table of which source maps to which layer before applying changes.
+* **Auto-Repeat / Cycling:** Have 3 clips but 15 layers? The script automatically repeats your sources across the timeline layers and indicates each cycle.
+* **Compositions Toggle:** Swap solids with precomps or nest precomps effortlessly.
+* **100% Non-destructive:** Swaps only the source assets. All keyframes, effects, crop/masks, transforms, and timing remain untouched.
+* **1-Click Undo:** Reverts the entire batch in a single `Ctrl+Z` / `Cmd+Z`.
+
+---
+
+## Key Features & Interface
+
+### 1. Live Mapping Preview
+Before modifying anything, the panel renders a live list showing:
 ```
-Source 1  →  Layer 1
-Source 2  →  Layer 2
-Source 3  →  Layer 3
-...
+#   | Source Footage / Comp       | Target Timeline Layer
+----+-----------------------------+---------------------------
+1   | Clip_A.mp4                  | [1] Placeholder Solid 1
+2   | Clip_B.mp4                  | [2] Placeholder Solid 2
+3   | Clip_A.mp4 (cycle 2)        | [3] Placeholder Solid 3
 ```
 
-If the counts don't match, it warns you before touching anything. The replacement is wrapped in an undo group so you can Ctrl/Cmd+Z if something looks wrong.
+### 2. Smart Repeat & Mismatch Handling
+You no longer need an exact 1:1 count:
+* **Fewer sources than layers ($S < L$):** The script automatically cycles through your sources to fill all target layers, tagging repeated entries with `(cycle 2)`, `(cycle 3)`, etc., and alerting you in the notice banner.
+* **More sources than layers ($S > L$):** The script uses the first $L$ sources and informs you how many extra sources will remain unused.
+* **Exact match ($S = L$):** Full 1-to-1 sequential mapping.
+
+### 3. "Allow Compositions as Sources" Toggle
+Check this box to include precomps and nested compositions in your replacement sources, or uncheck it to limit replacements strictly to raw footage items.
+
+---
+
+## ⚠️ How Ordering Works
+
+| Where | How it orders your selection | Pro Tip |
+| :--- | :--- | :--- |
+| **Project Panel** (Sources) | **Top to bottom** as listed in your Project bin (alphabetical). After Effects does *not* track click order in the Project panel. | Name your files with numbers (e.g. `clip_01.mp4`, `clip_02.mp4`) so they line up neatly in order. |
+| **Timeline** (Layers) | **Click order** (the order you selected them) or **top-to-bottom** (if using Shift or box-select). | Click your timeline layers in the order you want them filled, or select them from top to bottom. |
+
+---
+
+## How to Use It
+
+1. **Select your replacement files/comps** in the **Project panel**.
+2. **Select your target layers** in the **Timeline**.
+3. In the panel, click **Refresh Selection** to inspect the live preview mapping.
+4. Click **Replace Layers**.
+5. Done! Check the status banner to see confirmation of replaced layers.
 
 ---
 
 ## Installation
 
-### Option A — Permanent (recommended)
+### Option A: Install as a Dockable Panel (Recommended)
+Place `replace_layers_sequential.jsx` into the **ScriptUI Panels** directory:
 
-Drop the script into your AE Scripts folder and it'll appear in the **File → Scripts** menu every time you open AE.
+* **Windows:**  
+  `C:\Program Files\Adobe\Adobe After Effects [version]\Support Files\Scripts\ScriptUI Panels\`
+* **Mac:**  
+  `/Applications/Adobe After Effects [version]/Scripts/ScriptUI Panels/`
 
-**Windows:**
-```
-C:\Program Files\Adobe\Adobe After Effects [version]\Support Files\Scripts\
-```
+Restart After Effects, then open it from the **Window** menu:  
+`Window → replace_layers_sequential.jsx` (dock it anywhere in your workspace).
 
-**Mac:**
-```
-/Applications/Adobe After Effects [version]/Scripts/
-```
+### Option B: Run as a Standalone / Floating Palette
+In After Effects, go to:  
+**File → Scripts → Run Script File...** and choose `replace_layers_sequential.jsx`.
 
-Restart AE after copying the file.
-
-### Option B — One-off
-
-**File → Scripts → Run Script File** and browse to wherever you saved the `.jsx`.
-
----
-
-## Usage
-
-1. **Project panel** — Ctrl+click (Windows) or Cmd+click (Mac) your replacement clips **in the order you want them assigned**
-2. **Timeline** — Select your target layers in the same order
-3. **File → Scripts → replace_layers_sequential**
-
-> ⚠️ **Order matters.** AE registers project panel selections in the order you click them, so be deliberate. When working with a large batch, test with 2–3 clips first to confirm the order is what you expect.
-
----
-
-## Tips
-
-- **KBar users** — assign this to a toolbar button for one-click access without going through the menu
-- **Large comps** — select layers in the timeline using Shift+click or Ctrl/Cmd+A to grab all, then trim the selection as needed
-- The script **does not** affect layer timing, effects, or transform properties — it only swaps the source footage
+### Option C: KBar Integration
+Add this script as a button in **KBar** to launch the panel or trigger replacements with one click.
 
 ---
 
 ## Compatibility
 
-Tested on **After Effects 2025**. Should work on any version of AE that supports JSX scripting (CS6+).
+* Tested on **After Effects 2025** and backwards-compatible with CS6+.
+* Mac and Windows compatible.
+* Fully compatible with standard After Effects undo architecture.
 
 ---
 
 ## License
 
-MIT — do whatever you want with it.
+[MIT](LICENSE) — free to use and modify for personal and commercial projects.
